@@ -4,17 +4,33 @@ import "fmt"
 import "strconv"
 import "log"
 
+type stack []string
+
+func (s stack) Push(newString string) (stack stack) {
+	stack = append(s, newString)
+	return
+}
+
+func (s stack) Pop() (stackTop string, stack stack) {
+	l := len(s)
+	if l == 0 {
+		return
+	}
+	stackTop = s[l-1]
+	stack = s[:l-1]
+	return
+}
+
 func main() {
-	//Enter your code here. Read input from STDIN. Print output to STDOUT
 	lines, err := getLines()
-	if err != nil || lines < 1 || lines >= 1000 {
+	if err != nil || lines < 1 || lines > 1000 {
 		log.Println("Number of strings must be >= 1 and <= 10^3")
+		return
 	}
 
 	for line := 0; line < lines; line++ {
 		var lineString string
 		fmt.Scanln(&lineString)
-		log.Println(len(lineString))
 
 		if balancedBrackets(lineString) {
 			fmt.Println("YES")
@@ -34,21 +50,35 @@ func getLines() (lines int, err error) {
 }
 
 func balancedBrackets(lineString string) bool {
-	r := []rune(lineString)
-	if len(r)%2 != 0 {
+	lineRunes := []rune(lineString)
+	if l := len(lineRunes); l%2 != 0 || l > 1000 || l < 1 {
 		return false
 	}
 
-	brackets := make(map[rune]rune)
+	rightLeft := make(map[string]string)
 
-	brackets[40] = 41   // ()
-	brackets[123] = 125 // {}
-	brackets[91] = 93   // []
+	rightLeft["("] = ")"
+	rightLeft["["] = "]"
+	rightLeft["{"] = "}"
 
-	for i, j := 0, len(r)-1; i < len(r)/2; i, j = i+1, j-1 {
-		if brackets[r[i]] != r[j] {
+	var bracketStack stack
+
+	for _, r := range lineRunes {
+		if match, ok := rightLeft[string(r)]; ok {
+			bracketStack = bracketStack.Push(match)
+			continue
+		}
+
+		if l := len(bracketStack); l > 0 && string(r) == bracketStack[l-1] {
+			_, bracketStack = bracketStack.Pop()
+		} else {
 			return false
 		}
+
+	}
+
+	if len(bracketStack) != 0 {
+		return false
 	}
 	return true
 }

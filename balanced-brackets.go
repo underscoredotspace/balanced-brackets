@@ -4,19 +4,20 @@ import "fmt"
 import "strconv"
 import "log"
 
-type stack []string
+type stack []rune
+type bracketTypeList map[rune]rune
 
-func (s stack) Push(newString string) (stack stack) {
-	stack = append(s, newString)
+func (s stack) push(newElement rune) (stack stack) {
+	stack = append(s, newElement)
 	return
 }
 
-func (s stack) Pop() (stackTop string, stack stack) {
+func (s stack) pop() (topElement rune, stack stack) {
 	l := len(s)
 	if l == 0 {
 		return
 	}
-	stackTop = s[l-1]
+	topElement = s[l-1]
 	stack = s[:l-1]
 	return
 }
@@ -28,11 +29,16 @@ func main() {
 		return
 	}
 
+	brackets := make(bracketTypeList)
+	brackets[0x0028] = 0x0029
+	brackets[0x007b] = 0x007d
+	brackets[0x005b] = 0x005d
+
 	for line := 0; line < lines; line++ {
 		var lineString string
 		fmt.Scanln(&lineString)
 
-		if balancedBrackets(lineString) {
+		if brackets.balanced(lineString) {
 			fmt.Println("YES")
 		} else {
 			fmt.Println("NO")
@@ -49,32 +55,25 @@ func getLines() (lines int, err error) {
 	return
 }
 
-func balancedBrackets(lineString string) bool {
+func (bracketTypes bracketTypeList) balanced(lineString string) bool {
 	lineRunes := []rune(lineString)
-	if l := len(lineRunes); l%2 != 0 || l > 1000 || l < 1 {
+	if l := len(lineRunes); l%2 != 0 {
 		return false
 	}
-
-	rightLeft := make(map[string]string)
-
-	rightLeft["("] = ")"
-	rightLeft["["] = "]"
-	rightLeft["{"] = "}"
 
 	var bracketStack stack
 
 	for _, r := range lineRunes {
-		if match, ok := rightLeft[string(r)]; ok {
-			bracketStack = bracketStack.Push(match)
+		if match, ok := bracketTypes[r]; ok {
+			bracketStack = bracketStack.push(match)
 			continue
 		}
 
-		if l := len(bracketStack); l > 0 && string(r) == bracketStack[l-1] {
-			_, bracketStack = bracketStack.Pop()
-		} else {
+		var popped rune
+		popped, bracketStack = bracketStack.pop()
+		if popped != r {
 			return false
 		}
-
 	}
 
 	if len(bracketStack) != 0 {

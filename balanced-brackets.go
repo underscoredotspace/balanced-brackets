@@ -7,19 +7,15 @@ import "log"
 type stack []rune
 type bracketTypeList map[rune]rune
 
-func (s stack) push(newElement rune) (stack stack) {
-	stack = append(s, newElement)
-	return
+func (s *stack) push(newTop rune) {
+	*s = append(*s, newTop)
 }
 
-func (s stack) pop() (topElement rune, stack stack) {
-	l := len(s)
-	if l == 0 {
-		return
-	}
-	topElement = s[l-1]
-	stack = s[:l-1]
-	return
+func (s *stack) pop() rune {
+	stackLen := len(*s) - 1
+	topElement := (*s)[stackLen]
+	*s = (*s)[:stackLen]
+	return topElement
 }
 
 func main() {
@@ -57,7 +53,7 @@ func getLines() (lines int, err error) {
 
 func (bracketTypes bracketTypeList) balanced(lineString string) bool {
 	lineRunes := []rune(lineString)
-	if l := len(lineRunes); l%2 != 0 {
+	if len(lineRunes)%2 != 0 {
 		return false
 	}
 
@@ -65,13 +61,11 @@ func (bracketTypes bracketTypeList) balanced(lineString string) bool {
 
 	for _, r := range lineRunes {
 		if match, ok := bracketTypes[r]; ok {
-			bracketStack = bracketStack.push(match)
+			bracketStack.push(match)
 			continue
 		}
 
-		var popped rune
-		popped, bracketStack = bracketStack.pop()
-		if popped != r {
+		if bracketStack.pop() != r {
 			return false
 		}
 	}

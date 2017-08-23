@@ -11,10 +11,13 @@ func (s *stack) push(newTop rune) {
 	*s = append(*s, newTop)
 }
 
-func (s *stack) pop() rune {
-	stackLen := len(*s) - 1
-	topElement := (*s)[stackLen]
-	*s = (*s)[:stackLen]
+func (s *stack) pop() (topElement rune) {
+	stackLen := len(*s)
+	if stackLen == 0 {
+		return
+	}
+	topElement = (*s)[stackLen-1]
+	*s = (*s)[:stackLen-1]
 	return topElement
 }
 
